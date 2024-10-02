@@ -9,71 +9,75 @@ class User:
 
 
 class Video:
-    def __init__(self, title, duration, adult_mode=False):
+    def __init__(self, title, duration, adult_mode = False):
         self.title = title
         self.duration = duration
         self.time_now = 0
         self.adult_mode = adult_mode
 
 class UrTube:
-    def init(self):
+
+    def __init__(self):
         self.users = []
         self.videos = []
         self.current_user = None
 
     def log_in(self, nickname, password):
-        nickname = input('Введите логин: ')
-        password = hash(input('Введите пароль: '))
         for user in self.users:
-            if user.nickname == nickname and user.check_password(password):
+            if user.nickname == nickname and user.password == hash(password):
                 self.current_user = user
                 print(f"Приветствую, {nickname}")
-                continue
+                return
         print("Неверный никнейм или пароль")
 
     def register(self, nickname, password, age):
-        nickname = input('Введите никнейм: ')
-        password = hash(input('Введите пароль: '))
-        age = int(input('Введите Ваш возраст: '))
         for user in self.users:
             if user.nickname == nickname:
                 print(f"Пользователь {nickname} уже существует")
-                continue
+                return
         new_user = User(nickname, password, age)
         self.users.append(new_user)
         self.current_user = new_user
         print(f"Пользователь {nickname} успешно зарегистрирован")
 
-    def log_out(self, nickname):
-        if nickname not in self.users:
+    def log_out(self):
+        if self.current_user:
+            print(f"Пользователь {self.current_user.nickname} успешно вышел из системы.")
+            self.current_user = None
+        else:
             print("Пользователь не найден.")
 
-        print(f"Пользователь {nickname} успешно вышел из системы.")
 
-    def add(self, title, description, adult_mode):
-        video = Video(title, description, adult_mode)
-        self.videos.append(video)
-        print(f"Видео {title} успешно добавлено.")
+    def add(self, *videos):
+        for video in videos:
+            if video.title not in [v.title for v in self.videos]:
+                self.videos.append(video)
+            print(f"Видео {video.title} успешно добавлено.")
 
-    def get_videos(self, find_title, title):
-        find_title = str(input('Введите поисковое слово: '))
+    def get_videos(self, find_title):
+        find_title = find_title.lower()
+        result = []
         for video in self.videos:
-            if find_title.lower() in video.title.lower():
-                return self.videos
+            if find_title in video.title.lower():
+                result.append(video.title)
+        return result if result else "Видео не найдено"
 
-    def watch_video(self, nickname, title):
-        user = self.users.get(nickname)
-        if not user:
+    def watch_video(self, title):
+        if self.current_user is None:
             print("Войдите в аккаунт, чтобы смотреть видео")
+            return
 
         for video in self.videos:
             if video.title.lower() == title.lower():
-                if video.adult_mode == True and user.age < 18:
-                    print("Вам нет 18 лет, пожалуйста покиньте страницу")
-                video.time_now += 1
-                return video.time_now
-            print(video.time_now)
-        print("Конец видео")
+                if video.adult_mode and self.current_user.age < 18:
+                    print("Видео доступно только для пользователей старше 18 лет")
+                    return
+                print(f"Начинаем просмотр видео: {video.title}")
+                for i in range(1, video.duration):
+                    print(f'{i} секунда ', end='')
+                print('Конец видео')
+                return
+        print("Видео не найдено")
 
 if __name__ == "__main__":
     ur = UrTube()
@@ -100,6 +104,10 @@ if __name__ == "__main__":
 
     # Попытка воспроизведения несуществующего видео
     ur.watch_video('Лучший язык программирования 2024 года!')
+
+
+
+
 
 
 
